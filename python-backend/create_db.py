@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 # hotels.csv: id INTEGER,latitude REAL,longitude REAL,category_stars REAL
 column_types = {
     # offers.csv
-    "hotel_id": "INTEGER",
+    "hotelid": "INTEGER",
     "departuredate": "TIMESTAMP",
     "returndate": "TIMESTAMP",
     "countadults": "INTEGER",
@@ -28,7 +28,7 @@ column_types = {
 
 # import the csv dataset into the database
 def import_from_csv(con, cur, dataset_path, table_name, batch_size=1000, verbose=False):
-    with open(dataset_path) as file:
+    with open(dataset_path, encoding='utf-8-sig') as file:
         reader = csv.reader(file)
 
         # first create the table with the column names
