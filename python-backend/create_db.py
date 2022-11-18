@@ -78,4 +78,6 @@ if __name__ == "__main__":
 
     con = sqlite3.connect("database.db", detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     cur = con.cursor()
+    cur.execute('PRAGMA synchronous = OFF')
+    cur.execute('PRAGMA journal_mode = OFF')
     import_from_csv(con, cur, args[0], args[1], int(args[2]), verbose=True)
