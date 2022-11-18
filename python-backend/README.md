@@ -16,6 +16,14 @@ For offers.csv (*WARNING: WILL TAKE A LONG TIME*):
 python create_db.py offers.csv offers 1000000
 ```
 
+## Create SQL Index to (significantly) speed up queries
+```
+python query.py "CREATE INDEX IF NOT EXISTS idx_price ON offers(price);"
+python query.py "CREATE INDEX IF NOT EXISTS idx_departuredate ON offers(departuredate);"
+python query.py "CREATE INDEX IF NOT EXISTS idx_returndate ON offers(returndate);"
+python query.py "CREATE INDEX IF NOT EXISTS idx_category_stars ON hotels(category_stars);"
+```
+
 
 ## Start the REST API Server
 
