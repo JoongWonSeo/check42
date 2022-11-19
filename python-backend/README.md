@@ -38,6 +38,15 @@ flask --app server run
 ```
 
 
+## Example queries
+http://127.0.0.1:5000/search?price_max=310&airports=[%22MUC%22,%22DUS%22,%22FRA%22]&departure_after=2022-10-10&departure_before=2022-10-11
+
+More specific time (see [sqlite time](https://www.sqlite.org/lang_datefunc.html)):
+http://127.0.0.1:5000/search?price_max=310&airports=[%22MUC%22,%22DUS%22,%22FRA%22]&departure_after=2022-10-10T15:00&departure_before=2022-10-11T15:30
+
+http://127.0.0.1:5000/search?price_max=310&airports=[%22MUC%22]&adults=1&children=0&departure_after=2022-10-10&departure_before=2022-10-15
+
+
 ## Some observations about the given dataset
 
 ### offers.csv
