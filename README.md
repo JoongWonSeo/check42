@@ -12,6 +12,16 @@ My 2-day-implementation of the Check24 Holiday Challenge for the GenDev Scholars
 Each folders for the frontend and backend contain more detailed READMEs.
 
 
+## TODOS
+
+Due to time-constraints, there are several missing features:
+- Group by hotel view, the 'see offers' button doesn't show any second view currently.
+- The searched offers result list doesn't visualize some fetched data such as flight date (it's trivial but I was lazy).
+- Optimizing the SQL DB (refactoring, indexes, manual caching etc.) for faster response (for queries that require search of the entire 73M rows, it takes upto 30s on my laptop).
+- The URL to the backend server from the Flutter app is currently hardcoded (just set the 1 variable).
+- There are probably some bugs in the UI, especially for various aspect-ratios.
+
+
 ## Screenshots
 
 https://user-images.githubusercontent.com/30022460/202928463-7513213f-8f0c-4b46-8469-4dcea485bad5.mp4
