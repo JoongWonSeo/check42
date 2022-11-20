@@ -1,6 +1,6 @@
 # Check42
 
-Minimal Flutter front-end for Mallorca search. Tested on Android and Web, but it should also work on iOS and more. Currently the server IP is hardcoded in the source code...
+Minimal Flutter front-end for Mallorca search. Tested on Android and Web, but it should also work on iOS and more. Currently the server IP is hardcoded in the source code, so you should probably just compile yourself after running the Python backend and getting the IP...
 
 ## Getting Started
 
