@@ -1,6 +1,6 @@
-# check42
+# Check42
 
-A new Flutter project.
+Minimal Flutter front-end for Mallorca search. Tested on Android and Web, but it should also work on iOS and more. Currently the server IP is hardcoded in the source code...
 
 ## Getting Started
 
