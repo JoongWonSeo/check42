@@ -1,8 +1,18 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:multi_select_flutter/multi_select_flutter.dart';
+
+class Pair<T1, T2> {
+  final T1 a;
+  final T2 b;
+
+  Pair(this.a, this.b);
+}
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,10 +58,109 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   //query variables
+  List<String?> airports = [];
   DateTime? departureDate, returnDate;
+  int? numAdults, numChildren;
   bool? sortByPrice;
 
-  List<Widget>? results = null;
+  String server = "http://131.159.216.190:5000";
+  List? results;
+
+  List<MultiSelectItem<String?>> _cities = [
+    MultiSelectItem<String?>('"MUC"', 'Munich'),
+    MultiSelectItem<String?>('"FRA"', 'Frankfurt'),
+    MultiSelectItem<String?>('"HAM"', 'Hamburg'),
+    MultiSelectItem<String?>('"DUS"', 'Düsseldorf'),
+    MultiSelectItem<String?>('"BER"', 'Berlin'),
+    MultiSelectItem<String?>('"CGN"', 'Cologne'),
+  ];
+
+  void query() async {
+    //check args validity
+    if (airports.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please specify one or more airports!"),
+        ),
+      );
+      return;
+    }
+    if (departureDate != null &&
+        returnDate != null &&
+        departureDate!.isAfter(returnDate!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("The departure date must be before the return date!"),
+        ),
+      );
+      return;
+    }
+
+    List args = [
+      Pair(airports, (List<String?> a) => 'airports=[' + a!.join(',') + ']'),
+      Pair(departureDate, (DateTime d) => 'departure_after=' + d.toString()),
+      Pair(returnDate, (DateTime d) => 'return_before=' + d.toString()),
+      Pair(numAdults, (int n) => 'adults=' + n.toString()),
+      Pair(sortByPrice, (bool b) => 'sort_by=' + (b ? 'price' : 'rating'))
+    ];
+
+    for (int i = 0; i < args.length; i++) {
+      if (args[i].a == null) {
+        args.removeAt(i);
+        i--;
+      }
+    }
+
+    String q = server + '/search?' + args.map((p) => p.b(p.a)).join('&');
+    print(q);
+
+    try {
+      var response = await http.get(Uri.parse(q));
+      if (response.statusCode == 200) {
+        setState(() {
+          print(response.body);
+          results = jsonDecode(response.body)['results'];
+        });
+      }
+    } catch (e) {
+      //show toast
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching results: " + e.toString())),
+      );
+    }
+  }
+
+  List<Widget> buildResults() {
+    List<Widget> widgets = [];
+    for (var offer in results!) {
+      widgets.add(Card(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            ListTile(
+              leading: Icon(Icons.hotel),
+              title: Text(offer['hotel']),
+              subtitle: Text('From ' +
+                  offer['airport'] +
+                  ' - ' +
+                  offer['price'].toString() +
+                  '€'),
+            ),
+            ButtonBar(
+              children: <Widget>[
+                TextButton(
+                  child: const Text('SEE OFFERS'),
+                  onPressed: () {/* ... */},
+                ),
+              ],
+            ),
+          ],
+        ),
+      ));
+    }
+    print(widgets);
+    return widgets;
+  }
 
   Widget searchWidget() {
     return Center(
@@ -60,20 +169,27 @@ class _MyHomePageState extends State<MyHomePage> {
           Row(
             children: [
               Expanded(
-                child: TextField(
-                  onSubmitted: (q) {
-                    //TODO: send API request to get new data
+                child: MultiSelectBottomSheetField<String?>(
+                  items: _cities,
+                  onConfirm: (List<String?> values) {
+                    airports = values;
                   },
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.location_city),
-                    labelText: 'Departure from City/Cities',
-                    floatingLabelBehavior: FloatingLabelBehavior.never,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none),
-                    isDense: true,
-                    filled: true,
-                    fillColor: Colors.white,
+                  searchable: true,
+                  buttonIcon: Icon(
+                    Icons.location_on,
+                    color: Colors.grey,
+                  ),
+                  buttonText: Text(
+                    "Select Departure Airports...",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  chipDisplay: MultiSelectChipDisplay(
+                    scroll: true,
+                    height: 45,
                   ),
                 ),
               ),
@@ -88,7 +204,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     DateTime? picked = await showDatePicker(
                         context: context,
                         initialDate: DateTime.now(),
-                        firstDate: DateTime.now(),
+                        firstDate: /*DateTime.now()*/ DateTime
+                            .parse('2021-01-01'),
                         lastDate: DateTime.now().add(Duration(days: 365)));
                     if (picked != null) {
                       setState(() {
@@ -119,7 +236,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     DateTime? picked = await showDatePicker(
                         context: context,
                         initialDate: DateTime.now(),
-                        firstDate: DateTime.now(),
+                        firstDate: /*DateTime.now()*/ DateTime
+                            .parse('2021-01-01'),
                         lastDate: DateTime.now().add(Duration(days: 365)));
                     if (picked != null) {
                       setState(() {
@@ -151,7 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Expanded(
                 child: TextField(
                   onSubmitted: (q) {
-                    //TODO: send API request to get new data
+                    numAdults = int.parse(q);
                   },
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
@@ -174,7 +292,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Expanded(
                 child: TextField(
                   onSubmitted: (q) {
-                    //TODO: send API request to get new data
+                    numChildren = int.parse(q);
                   },
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
@@ -231,7 +349,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           SizedBox(height: 10),
           ElevatedButton.icon(
-            onPressed: () {},
+            onPressed: query,
             icon: Icon(Icons.search),
             label: Text('Search Offers'),
             style: ButtonStyle(
@@ -277,7 +395,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 SliverAppBar(
                   pinned: true,
                   // expandedHeight: MediaQuery.of(context).size.height * 1 / 3,
-                  expandedHeight: 500,
+                  expandedHeight: 550,
                   backgroundColor: Color.fromARGB(119, 22, 93, 180),
                   flexibleSpace: FlexibleSpaceBar(
                     background: Padding(
@@ -288,13 +406,13 @@ class _MyHomePageState extends State<MyHomePage> {
                           Expanded(
                             child: Column(
                               children: [
-                                Text('CHECK42',
+                                const Text('CHECK42',
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 56,
                                         fontStyle: FontStyle.italic,
                                         fontWeight: FontWeight.w900)),
-                                Text(
+                                const Text(
                                     'Check the answer to life,\nthe universe, \nand everything.',
                                     style: TextStyle(
                                         color: Colors.white,
@@ -317,23 +435,27 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      var col = HSLColor.fromAHSL(
-                              1, (((index / 50.0) * 360 + 200) % 360), 0.5, 0.5)
-                          .toColor();
-                      return SizedBox(
-                        height: 100,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: col, width: 0),
-                            color: col,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                    delegate: results == null
+                        ? (SliverChildBuilderDelegate(
+                            (context, index) {
+                              var col = HSLColor.fromAHSL(
+                                      1,
+                                      (((index / 50.0) * 360 + 200) % 360),
+                                      0.5,
+                                      0.5)
+                                  .toColor();
+                              return SizedBox(
+                                height: 100,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: col, width: 0),
+                                    color: col,
+                                  ),
+                                ),
+                              );
+                            },
+                          ))
+                        : (SliverChildListDelegate(buildResults()))),
               ],
             )
           ]),

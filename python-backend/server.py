@@ -58,9 +58,9 @@ LIMIT 100
 
     # execute query
     results = cur.execute(query, args).fetchall()
-    results = [{
+    results = {'results': [{
         'hotel': hotel, 'airport': airport, 'price': price, 'dep': dep, 'ret': ret, 'room': room
-        } for hotel, airport, price, dep, ret, room in results]
+        } for hotel, airport, price, dep, ret, room in results]}
     
     cur.close()
     return jsonify(results)
