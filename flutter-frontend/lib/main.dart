@@ -66,13 +66,53 @@ class _MyHomePageState extends State<MyHomePage> {
   String server = "http://131.159.216.190:5000";
   List? results;
 
+// IATA Codes to City Name: 'LEJ', 'STR', 'HAM', 'DUS', 'DRS', 'FRA', 'CGN', 'MUC', 'FMO', 'SCN', 'DTM', 'NUE', 'FKB', 'HAJ', 'KSF', 'BER', 'BSL', 'FMM', 'FDH', 'BRE', 'NRN', 'ZRH', 'PAD', 'ERF', 'LBC', 'PRG', 'VIE', 'SZG', 'EIN', 'AMS', 'INN', 'LUX', 'BLL', 'LNZ', 'GVA', 'SXB', 'KRK', 'BRU', 'WAW', 'GRZ', 'GRQ', 'KLU', 'GWT', 'BRN', 'BRS'
   List<MultiSelectItem<String?>> _cities = [
-    MultiSelectItem<String?>('"MUC"', 'Munich'),
-    MultiSelectItem<String?>('"FRA"', 'Frankfurt'),
+    MultiSelectItem<String?>('"LEJ"', 'Leipzig'),
+    MultiSelectItem<String?>('"STR"', 'Stuttgart'),
     MultiSelectItem<String?>('"HAM"', 'Hamburg'),
     MultiSelectItem<String?>('"DUS"', 'Düsseldorf'),
+    MultiSelectItem<String?>('"DRS"', 'Dresden'),
+    MultiSelectItem<String?>('"FRA"', 'Frankfurt'),
+    MultiSelectItem<String?>('"CGN"', 'Köln'),
+    MultiSelectItem<String?>('"MUC"', 'München'),
+    MultiSelectItem<String?>('"FMO"', 'Münster'),
+    MultiSelectItem<String?>('"SCN"', 'Saarbrücken'),
+    MultiSelectItem<String?>('"DTM"', 'Dortmund'),
+    MultiSelectItem<String?>('"NUE"', 'Nürnberg'),
+    MultiSelectItem<String?>('"FKB"', 'Karlsruhe'),
+    MultiSelectItem<String?>('"HAJ"', 'Hannover'),
+    MultiSelectItem<String?>('"KSF"', 'Kassel'),
     MultiSelectItem<String?>('"BER"', 'Berlin'),
-    MultiSelectItem<String?>('"CGN"', 'Cologne'),
+    MultiSelectItem<String?>('"BSL"', 'Basel'),
+    MultiSelectItem<String?>('"FMM"', 'Memmingen'),
+    MultiSelectItem<String?>('"FDH"', 'Friedrichshafen'),
+    MultiSelectItem<String?>('"BRE"', 'Bremen'),
+    MultiSelectItem<String?>('"NRN"', 'Weeze'),
+    MultiSelectItem<String?>('"ZRH"', 'Zürich'),
+    MultiSelectItem<String?>('"PAD"', 'Paderborn'),
+    MultiSelectItem<String?>('"ERF"', 'Erfurt'),
+    MultiSelectItem<String?>('"LBC"', 'Lübeck'),
+    MultiSelectItem<String?>('"PRG"', 'Prag'),
+    MultiSelectItem<String?>('"VIE"', 'Wien'),
+    MultiSelectItem<String?>('"SZG"', 'Salzburg'),
+    MultiSelectItem<String?>('"EIN"', 'Eindhoven'),
+    MultiSelectItem<String?>('"AMS"', 'Amsterdam'),
+    MultiSelectItem<String?>('"INN"', 'Innsbruck'),
+    MultiSelectItem<String?>('"LUX"', 'Luxemburg'),
+    MultiSelectItem<String?>('"BLL"', 'Billund'),
+    MultiSelectItem<String?>('"LNZ"', 'Linz'),
+    MultiSelectItem<String?>('"GVA"', 'Genf'),
+    MultiSelectItem<String?>('"SXB"', 'Straßburg'),
+    MultiSelectItem<String?>('"KRK"', 'Krakau'),
+    MultiSelectItem<String?>('"BRU"', 'Brüssel'),
+    MultiSelectItem<String?>('"WAW"', 'Warschau'),
+    MultiSelectItem<String?>('"GRZ"', 'Graz'),
+    MultiSelectItem<String?>('"GRQ"', 'Groningen'),
+    MultiSelectItem<String?>('"KLU"', 'Klagenfurt'),
+    MultiSelectItem<String?>('"GWT"', 'Westerland'),
+    MultiSelectItem<String?>('"BRN"', 'Bern'),
+    MultiSelectItem<String?>('"BRS"', 'Bristol'),
   ];
 
   void query() async {
@@ -81,6 +121,15 @@ class _MyHomePageState extends State<MyHomePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Please specify one or more airports!"),
+        ),
+      );
+      return;
+    }
+    if ((numAdults == null || numAdults! < 1) &&
+        (numChildren == null || numChildren! < 1)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please specify the number of travellers!"),
         ),
       );
       return;
@@ -101,6 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
       Pair(departureDate, (DateTime d) => 'departure_after=' + d.toString()),
       Pair(returnDate, (DateTime d) => 'return_before=' + d.toString()),
       Pair(numAdults, (int n) => 'adults=' + n.toString()),
+      Pair(numChildren, (int n) => 'children=' + n.toString()),
       Pair(sortByPrice, (bool b) => 'sort_by=' + (b ? 'price' : 'rating'))
     ];
 
@@ -131,23 +181,33 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   List<Widget> buildResults() {
+    cap(String s) => s[0].toUpperCase() + s.substring(1);
+
     List<Widget> widgets = [];
-    for (var offer in results!) {
+    for (var o in results!) {
       widgets.add(Card(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             ListTile(
               leading: Icon(Icons.hotel),
-              title: Text(offer['hotel']),
-              subtitle: Text('From ' +
-                  offer['airport'] +
-                  ' - ' +
-                  offer['price'].toString() +
-                  '€'),
+              title: Text(o['hotel']),
+              subtitle: Text(o['airport'] + ' - PMI'),
+              trailing: Text(o['adults'].toString() +
+                  'x Adults' +
+                  (o['children'] > 0
+                      ? '\n' + o['children'].toString() + 'x Children'
+                      : '') +
+                  '\n' +
+                  cap(o['room']) +
+                  (o['ocean'] == 1 ? '\nOcean View' : '')),
             ),
             ButtonBar(
               children: <Widget>[
+                Text(
+                  o['price'].toString() + '€',
+                  style: TextStyle(fontSize: 25),
+                ),
                 TextButton(
                   child: const Text('SEE OFFERS'),
                   onPressed: () {/* ... */},
@@ -216,7 +276,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   icon: Icon(Icons.flight_takeoff),
                   label: Text(departureDate == null
                       ? 'Depart after'
-                      : departureDate.toString()),
+                      : departureDate
+                          .toString()
+                          .replaceFirst('00:00:00.000', '')),
                   style: ButtonStyle(
                     minimumSize:
                         MaterialStateProperty.all(Size(double.infinity, 50)),
@@ -248,7 +310,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   icon: Icon(Icons.flight_land),
                   label: Text(returnDate == null
                       ? 'Return before'
-                      : returnDate.toString()),
+                      : returnDate.toString().replaceFirst('00:00:00.000', '')),
                   style: ButtonStyle(
                     minimumSize:
                         MaterialStateProperty.all(Size(double.infinity, 50)),
@@ -269,7 +331,11 @@ class _MyHomePageState extends State<MyHomePage> {
               Expanded(
                 child: TextField(
                   onSubmitted: (q) {
-                    numAdults = int.parse(q);
+                    if (q != '') {
+                      numAdults = int.parse(q);
+                    } else {
+                      numAdults = null;
+                    }
                   },
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
@@ -292,7 +358,11 @@ class _MyHomePageState extends State<MyHomePage> {
               Expanded(
                 child: TextField(
                   onSubmitted: (q) {
-                    numChildren = int.parse(q);
+                    if (q != '') {
+                      numChildren = int.parse(q);
+                    } else {
+                      numChildren = null;
+                    }
                   },
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
